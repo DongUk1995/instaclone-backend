@@ -1,19 +1,22 @@
 import bcrypt from "bcrypt";
 import client from "../../client";
+import jwt from "jsonwebtoken";
 
 export default {
   Mutation: {
     editProfile: async (
       _,
-      { firstName, lastName, email, password: newPassword }
+      { firstName, lastName, email, password: newPassword },
+      { loggedInUser }
     ) => {
+      console.log(loggedInUser);
       let uglyPassword = null;
       if (newPassword) {
         uglyPassword = await bcrypt.hash(newPassword, 10);
       }
       const updateUser = await client.user.update({
         where: {
-          id: 1,
+          id: loggedInUser.id,
         },
         data: {
           firstName,
