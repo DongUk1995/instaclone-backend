@@ -18,8 +18,15 @@ export const getUser = async (token) => {
   }
 };
 
-export const protectResolver = (user) => {
-  if (!user) {
-    throw new Error("You need to login.");
-  }
-};
+// const plus = (a,b) => a+b -> 함수 plus가 있고 a,b 라는 argument를 받으면 a+b는 리턴
+export function protectedResolver(ourResolver) {
+  return function (root, args, context, info) {
+    if (!context.loggedInUser) {
+      return {
+        ok: false,
+        error: "실핼하실려면 로그인 해주세요.",
+      };
+    }
+    return ourResolver(root, args, context, info);
+  };
+}
