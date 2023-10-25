@@ -1,4 +1,5 @@
 import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
 import client from "../client";
 
 export default {
@@ -39,6 +40,30 @@ export default {
       } catch (e) {
         return e;
       }
+    },
+    login: async (_, { username, password }) => {
+      // 유저를 먼저 찾고
+      const user = await client.user.findFirst({ where: { username } });
+      if (!user) {
+        return {
+          ok: false,
+          error: "아이디를 찾을 수 없습니다..",
+        };
+      }
+      // 패스워드를 체크하고
+      const passwordOk = await bcrypt.compare(password, user.password);
+      if (!passwordOk) {
+        return {
+          ok: false,
+          error: "비밀번호가 잘못 되었습니다.",
+        };
+      }
+      // 만약 둘다 문제 없으면 토큰을 발생해서 유저에게 리턴
+      const token = await jwt.sign({ id: user.id }, process.env.SECRECT_KEY);
+      return {
+        ok: true,
+        token,
+      };
     },
   },
 };
