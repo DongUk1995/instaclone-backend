@@ -7,9 +7,19 @@ export default gql`
     lastName: String
     username: String!
     email: String!
-    createAt: String!
+    createdAt: String!
     updatedAt: String!
-    bio: String
-    avatar: String
+  }
+  type Mutation {
+    crateAccount(
+      firstName: String!
+      lastName: String
+      username: String!
+      email: String!
+      password: String!
+    ): User
+  }
+  type Query {
+    seeProfile(username: String): User
   }
 `;

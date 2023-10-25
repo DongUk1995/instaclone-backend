@@ -1,14 +1,15 @@
 import bcrypt from "bcrypt";
-import client from "../../client";
+import client from "../client";
 
 export default {
   Mutation: {
-    createAccount: async (
+    // 사용자가 우리에게 줄 데이터
+    crateAccount: async (
       _,
       { firstName, lastName, username, email, password }
     ) => {
-      // 확인 유저 네임이 있거나 이메일일 이미 있는 것을 데이터베이스 안에 _ 중복확인 제한
       try {
+        // 먼저 사용자나 이메일이 데이터베이스에 있는지 확인한다.
         const existingUser = await client.user.findFirst({
           where: {
             OR: [
@@ -22,11 +23,10 @@ export default {
           },
         });
         if (existingUser) {
-          throw new Error("이 아이디와 패스워드는 이미 존재합니다.");
+          throw new Error("이 아이디와 비번은 이미 존재합니다."); // throw를 하면 밑에 return은 실행 되지 않는다. 폭탄같은 거다 폭탄 터짐 좆댐
         }
-        // 만약에 없다면 hash password
+        // 해시 패스워드
         const uglyPassword = await bcrypt.hash(password, 10);
-        // save adn return the user
         return client.user.create({
           data: {
             username,
