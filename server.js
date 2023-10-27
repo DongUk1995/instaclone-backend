@@ -1,15 +1,19 @@
 require("dotenv").config();
 import { ApolloServer } from "apollo-server";
-import schema from "./schema";
+import { typeDefs, resolvers } from "./schema";
+import { getUser, protectResolver } from "./users/users.utils";
 
 const PORT = process.env.PORT;
 const server = new ApolloServer({
-  schema,
-  context: {
-    token:
-      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiaWF0IjoxNjk4MjM4NjI2fQ.dGgFGGHb-LPlbTpC5JWJ5H23LcruEoHUSDqX0IvmKls",
+  typeDefs,
+  resolvers,
+  context: async ({ req }) => {
+    return {
+      loggedInUser: await getUser(req.headers.token),
+      protectResolver,
+    }; // req의 정보를 받아아와서 getUser에 token을 주고 loggedInUser에 리턴
   },
 });
 server
   .listen(PORT)
-  .then(() => console.log(`😗server is running on http://localhost:${PORT}/`));
+  .then(() => console.log(`😗server is running on http://localhost:${PORT}✅`));
