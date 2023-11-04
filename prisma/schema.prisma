@@ -1,5 +1,6 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
+
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
@@ -19,11 +20,11 @@ model User {
   bio       String?
   avatar    String?
   photos    Photo[]
+  likes     Like[]
   followers User[]   @relation("FollowRelation")
   following User[]   @relation("FollowRelation")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  likes      Like[]
 }
 
 model Photo {
@@ -35,7 +36,7 @@ model Photo {
   hashtags  Hashtag[]
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
-  likes      Like[]
+  likes     Like[]
 }
 
 model Hashtag {
@@ -50,9 +51,10 @@ model Like {
   id        Int      @id @default(autoincrement())
   photo     Photo    @relation(fields: [photoId], references: [id])
   user      User     @relation(fields: [userId], references: [id])
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
   photoId   Int
   userId    Int
-  @@unique([photoId,userId])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([photoId, userId])
 }

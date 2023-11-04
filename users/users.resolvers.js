@@ -45,6 +45,6 @@ export default {
       //return exists !== 0;
       return Boolean(exists);
     }, // 현재 우리는 먼저 로그인 되어있는 유저를 찾고 로그인 된 유저의 팔로잉 리스트 안에 우리가 보고 있는 사람의 id가 있는지 검색해 본다.
-    photos: ({ id }) => client.user.findUnique({ where: { id } }).photos,
+    photos: ({ id }) => client.user.findUnique({ where: { id } }).photos(),
   },
 };

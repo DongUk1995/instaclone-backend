@@ -20,5 +20,4 @@ export default gql`
     isFollowing: Boolean!
   }
 `;
-
 //fowing, followers, isfollowing, isme => computed field 데이터베이스에 넣지 않는 필드

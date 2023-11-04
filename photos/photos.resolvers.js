@@ -17,7 +17,13 @@ export default {
   },
   Hashtag: {
     photos: ({ id }, { page }, { loggedInUser }) => {
-      client.hashtag.findUnique({ where: { id } }).photos();
+      return client.hashtag
+        .findUnique({
+          where: {
+            id,
+          },
+        })
+        .photos();
     },
     totalPhotos: ({ id }) =>
       client.photo.count({
