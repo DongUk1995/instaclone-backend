@@ -7,7 +7,7 @@ export const uploadToS3 = async (file, userId, folderName) => {
   const { Location } = await new AWS.S3()
     .upload({
       Buket: "sns-uploads",
-      key: objName,
+      key: objectName,
       ACL: "public-read",
       Body: "readStream",
     })
