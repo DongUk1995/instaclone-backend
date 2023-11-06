@@ -19,13 +19,19 @@ export const getUser = async (token) => {
     return null;
   }
 };
+// 밑에 이놈이 리솔버를 실행할 때 가로챈다 즉 : 배열로 result해야하는데 임마가 가로채서 ok:flase로 딕렉토리 출력으로 Iterable에러라고 나온다.
 export const protectedResolver =
   (ourResolver) => (root, args, context, info) => {
     if (!context.loggedInUser) {
-      return {
-        ok: false,
-        error: "Please log in to perform this action.",
-      };
+      const query = info.operation.operation === "query";
+      if (query) {
+        return null;
+      } else {
+        return {
+          ok: false,
+          error: "Please log in to perform this action.",
+        };
+      }
     }
     return ourResolver(root, args, context, info);
   };
