@@ -1,45 +1,43 @@
 import { createWriteStream } from "fs";
+import GraphQLUpload from "graphql-upload/GraphQLUpload.js";
 import bcrypt from "bcrypt";
 import client from "../../client";
 import { protectedResolver } from "../users.utils";
-import { uploadToS3 } from "../../shared/shared.utils";
+import { uploadPhoto } from "../../shared/shared.utils";
 
-console.log(process.cwd());
-
-const resolverFn = async (
+const editProfileResolver = async (
   _,
-  { firstName, lastName, username, email, password: newPassword, bio, avatar },
+  { username, email, name, password: newPassword, location, avatar },
   { loggedInUser }
 ) => {
   let avatarUrl = null;
-
   if (avatar) {
-    avatarUrl = await uploadToS3(avatar, loggedInUser.id, "avatars");
-    /* const { filename, createReadStream } = await avatar;
-        const newFilename = `${loggedInUser.id}-${Date.now()}-${filename}`;
-        const readStream = createReadStream();
-        const writeStream = createWriteStream(
-          process.cwd() + "/uploads/" + newFilename
-        );
-        readStream.pipe(writeStream);
-        avatarUrl = `http://localhost:4000/static/${newFilename}`; */
+    avatarUrl = await uploadPhoto(avatar, loggedInUser.id);
   }
-  let uglyPassword = null;
+  /* const { filename, createReadStream } = await avatar;
+  const newFileName = `${loggedInUser.id}-${Date.now()}-${filename}`;
+  const readStream = createReadStream();
+  const writeStream = createWriteStream(
+    process.cwd() + "/uploads/" + newFileName
+  );
+  readStream.pipe(writeStream);
+  avatarUrl = `http://localhost:${process.env.PORT}/static/${newFileName}`;
+ */
+  let newCryptPassword = null;
   if (newPassword) {
-    uglyPassword = await bcrypt.hash(newPassword, 10);
+    newCryptPassword = await bcrypt.hash(newPassword, 10);
   }
   const updatedUser = await client.user.update({
     where: {
       id: loggedInUser.id,
     },
     data: {
-      firstName,
-      lastName,
       username,
       email,
-      bio,
-      ...(uglyPassword && { password: uglyPassword }),
+      name,
+      location,
       ...(avatarUrl && { avatar: avatarUrl }),
+      ...(newCryptPassword && { password: newCryptPassword }),
     },
   });
   if (updatedUser.id) {
@@ -55,7 +53,8 @@ const resolverFn = async (
 };
 
 export default {
+  Upload: GraphQLUpload,
   Mutation: {
-    editProfile: protectedResolver(resolverFn),
+    editProfile: protectedResolver(editProfileResolver),
   },
 };
