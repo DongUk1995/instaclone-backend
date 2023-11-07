@@ -1,5 +1,4 @@
 import AWS from "aws-sdk";
-import { createReadStream } from "fs";
 
 export const uploadToS3 = async (file, userId, folderName) => {
   const { filename, createReadStream } = await file;
