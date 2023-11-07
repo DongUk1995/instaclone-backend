@@ -1,4 +1,5 @@
 import client from "../../client";
+import { uploadToS3 } from "../../shared/shared.utils";
 import { protectedResolver } from "../../users/users.utils";
 import { processHashtags } from "../photos.utils";
 
@@ -11,10 +12,11 @@ export default {
           ///댓글이 존재하고 그 caption에 해시태그를 추출
           hastagObjs = processHashtags(caption);
         }
+        const fileUrl = await uploadToS3(file, loggedInUser.id, "uploads");
         ///댓글에 해시 태크가 존재하면 해시 태그를 생성하고 이미 존재할 수 있으니깐 해시태크를 get or create 작업을 할 것이다.
         return client.photo.create({
           data: {
-            file,
+            file: fileUrl,
             caption,
             user: {
               connect: {
