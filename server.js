@@ -10,6 +10,7 @@ import cors from "cors";
 import pkg from "body-parser";
 import { resolvers, typeDefs } from "./schema";
 import { getUser } from "./users/users.utils";
+import pubsub from "./pubsub";
 
 const { json } = pkg;
 const PORT = process.env.PORT;
