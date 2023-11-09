@@ -3,6 +3,7 @@ import { ApolloServer } from "@apollo/server";
 import { expressMiddleware } from "@apollo/server/express4";
 import { ApolloServerPluginDrainHttpServer } from "@apollo/server/plugin/drainHttpServer";
 import graphqlUploadExpress from "graphql-upload/graphqlUploadExpress.js";
+import { makeExecutableSchema } from "@graphql-tools/schema";
 import logger from "morgan";
 import express from "express";
 import http from "http";
@@ -10,17 +11,34 @@ import cors from "cors";
 import pkg from "body-parser";
 import { resolvers, typeDefs } from "./schema";
 import { getUser } from "./users/users.utils";
-import pubsub from "./pubsub";
+import { WebSocketServer } from "ws";
+import { useServer } from "graphql-ws/lib/use/ws";
 
+const schema = makeExecutableSchema({ typeDefs, resolvers });
 const { json } = pkg;
 const PORT = process.env.PORT;
 const app = express();
 const httpServer = http.createServer(app);
-async function startApolloServer(typeDefs, resolvers) {
+const wsServer = new WebSocketServer({
+  server: httpServer,
+  path: "/subscriptions",
+});
+const serverCleanup = useServer({ schema }, wsServer);
+async function startApolloServer() {
   const server = new ApolloServer({
-    typeDefs,
-    resolvers,
-    plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
+    schema,
+    plugins: [
+      ApolloServerPluginDrainHttpServer({ httpServer }),
+      {
+        async serverWillStart() {
+          return {
+            async drainServer() {
+              await serverCleanup.dispose();
+            },
+          };
+        },
+      },
+    ],
     csrfPrevention: false,
   });
 
@@ -31,6 +49,7 @@ async function startApolloServer(typeDefs, resolvers) {
     cors(),
     json(),
     logger("tiny"),
+    express.json(),
     graphqlUploadExpress(),
     expressMiddleware(server, {
       context: async ({ req }) => {
@@ -46,4 +65,4 @@ async function startApolloServer(typeDefs, resolvers) {
   console.log(`🚀  Server ready at: http://localhost:${PORT}/graphql`);
 }
 
-startApolloServer(typeDefs, resolvers);
+startApolloServer();
