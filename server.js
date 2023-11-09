@@ -6,7 +6,7 @@ import graphqlUploadExpress from "graphql-upload/graphqlUploadExpress.js";
 import { makeExecutableSchema } from "@graphql-tools/schema";
 import logger from "morgan";
 import express from "express";
-import http from "http";
+import { createServer } from "http";
 import cors from "cors";
 import pkg from "body-parser";
 import { resolvers, typeDefs } from "./schema";
@@ -18,13 +18,13 @@ const schema = makeExecutableSchema({ typeDefs, resolvers });
 const { json } = pkg;
 const PORT = process.env.PORT;
 const app = express();
-const httpServer = http.createServer(app);
+const httpServer = createServer(app);
 const wsServer = new WebSocketServer({
   server: httpServer,
-  path: "/subscriptions",
+  path: "/graphql",
 });
 const serverCleanup = useServer({ schema }, wsServer);
-async function startApolloServer() {
+async function startServer() {
   const server = new ApolloServer({
     schema,
     plugins: [
@@ -49,13 +49,14 @@ async function startApolloServer() {
     cors(),
     json(),
     logger("tiny"),
-    express.json(),
     graphqlUploadExpress(),
     expressMiddleware(server, {
       context: async ({ req }) => {
-        return {
-          loggedInUser: await getUser(req.headers.token),
-        };
+        if (req) {
+          return {
+            loggedInUser: await getUser(req.headers.token),
+          };
+        }
       },
     })
   );
@@ -65,4 +66,4 @@ async function startApolloServer() {
   console.log(`🚀  Server ready at: http://localhost:${PORT}/graphql`);
 }
 
-startApolloServer();
+startServer();
