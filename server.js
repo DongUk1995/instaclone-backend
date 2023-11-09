@@ -23,7 +23,28 @@ const wsServer = new WebSocketServer({
   server: httpServer,
   path: "/graphql",
 });
-const serverCleanup = useServer({ schema }, wsServer);
+const serverCleanup = useServer(
+  {
+    schema,
+    context: async (ctx) => {
+      if (!ctx.connectionParams?.token) {
+        return { loggedInUser: null };
+      }
+      const loggedInUser = await getUser(ctx.connectionParams?.token);
+      return {
+        loggedInUser,
+      };
+    },
+    onConnect: async (ctx) => {
+      if (!ctx.connectionParams?.token) {
+        throw new Error("token is missing");
+      }
+    },
+    onDisconnect(ctx, code, reason) {},
+  },
+  wsServer
+);
+
 async function startServer() {
   const server = new ApolloServer({
     schema,
@@ -48,7 +69,6 @@ async function startServer() {
     "/graphql",
     cors(),
     json(),
-    logger("tiny"),
     graphqlUploadExpress(),
     expressMiddleware(server, {
       context: async ({ req }) => {
